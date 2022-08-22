@@ -10,12 +10,16 @@ contract Whitelist {
 
     IWhitelistChecker[] public checkers;
 
+    /// @dev A mapping of index in checkers by the whitelist checker contract address
     mapping(IWhitelistChecker => uint256) checkerIndex;
 
-    mapping(address => uint256[]) public tokenListOf; // map from token owner to tokens
+    /// @dev A mapping of lists of tokenIds by the owner
+    mapping(address => uint256[]) public tokenListOf;
 
-    mapping(uint256 => uint256) public tokenIndex; // map from tokenId to its tokenListOf[_owner] index
+    /// @dev A mapping of token index of of tokenListOf by tokenIds
+    mapping(uint256 => uint256) public tokenIndex;
 
+    /// @dev A mapping of owners by tokenIds
     mapping(uint256 => address) public ownerOf; // map from tokenId to token owner
 
     event CheckerAdded(IWhitelistChecker checker);
@@ -39,6 +43,7 @@ contract Whitelist {
         governance = _governance;
     }
 
+    /// @dev A modifier which reverts when the caller is not the governance.
     modifier onlyGovernance() {
         require(msg.sender == governance, "Whitelist: only governance");
         _;
@@ -73,11 +78,12 @@ contract Whitelist {
         emit GovernanceUpdated(pendingGovernance);
     }
 
-    function addChecker(IWhitelistChecker _checker) external {
-        require(
-            msg.sender == address(_checker) || msg.sender == governance,
-            "Whitelist: only checker or governance"
-        );
+    /// @dev Adds a whitelistChecker to the whitelist
+    ///
+    /// This function can only called by the current governance.
+    ///
+    /// @param _checker The whitelistChecker.sol contract to be added.
+    function addChecker(IWhitelistChecker _checker) external onlyGovernance {
         require(
             address(_checker) != address(0),
             "Whitelist: checker cannot be 0x0"
@@ -92,11 +98,12 @@ contract Whitelist {
         emit CheckerAdded(_checker);
     }
 
-    function removeChecker(IWhitelistChecker _checker) external {
-        require(
-            msg.sender == address(_checker) || msg.sender == governance,
-            "Whitelist: only checker or governance"
-        );
+    /// @dev Removes a whitelistChecker to the whitelist.
+    ///
+    /// This function can only called by the current governance.
+    ///
+    /// @param _checker The whitelistChecker.sol contract to be removed.
+    function removeChecker(IWhitelistChecker _checker) external onlyGovernance {
         require(
             checkerIndex[_checker] != 0,
             "Whitelist: the checker doesn't exist"
@@ -112,6 +119,12 @@ contract Whitelist {
         emit CheckerRemoved(_checker);
     }
 
+    /// @dev Adds an NFT to the whitelist.
+    ///
+    /// This function can only called by the current governance.
+    ///
+    /// @param _owner The owner of the NFT.
+    /// @param _tokenId The tokenId of the NFT.
     function addNFT(address _owner, uint256 _tokenId) external onlyGovernance {
         require(
             ownerOf[_tokenId] == address(0),
@@ -124,6 +137,11 @@ contract Whitelist {
         emit TokenAdded(_owner, _tokenId);
     }
 
+    /// @dev Removes an NFT from the whitelist.
+    ///
+    /// This function can only called by the token owner
+    ///
+    /// @param _tokenId The tokenId of the NFT.
     function removeNFT(uint256 _tokenId) external {
         require(
             ownerOf[_tokenId] == msg.sender,
@@ -148,14 +166,29 @@ contract Whitelist {
         emit TokenRemoved(msg.sender, _tokenId);
     }
 
+    /// @dev Returns true if the owner has any NFT in this whitelist.
+    ///
+    /// @param _owner The owner.
+    ///
+    /// @return true if the owner has any NFT in this whitelist, false otherwise.
     function includeOwner(address _owner) external view returns (bool) {
         return tokenListOf[_owner].length > 0;
     }
 
+    /// @dev Gets number of NFTs the owner has.
+    ///
+    /// @param _owner The owner.
+    ///
+    /// @return Number of NFT owned by the owner.
     function balanceOf(address _owner) external view returns (uint256) {
         return tokenListOf[_owner].length;
     }
 
+    /// @dev Gets all NFTs the owner has.
+    ///
+    /// @param _owner The owner.
+    ///
+    /// @return List of NFTs the owner has
     function listTokens(address _owner)
         external
         view

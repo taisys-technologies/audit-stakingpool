@@ -60,7 +60,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
 
     Pool.Data private _pool;
 
-    /// @dev A mapping of all of the user stakes mapped first by pool and then by address.
+    /// @dev A mapping of all of the user stakes mapped by address.
     mapping(address => Stake.Data) private _stakes;
 
     constructor(address _governance, IERC20 _token) {
@@ -84,6 +84,13 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         _;
     }
 
+    /// @dev Returns ture if the staking contract is using the NFT, false otherwise.
+    ///
+    /// Return true if removing the target NFT does not affect the staking contract.
+    ///
+    /// @param _whitelist The whitelist of the NFT.
+    /// @param _owner The owner of the NFT.
+    /// @param _tokenId The token ID of the NFT.
     function isUsing(
         Whitelist _whitelist,
         address _owner,
@@ -97,11 +104,11 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         );
     }
 
-    /// @dev Set the period for calculating interest.
+    /// @dev Sets the period for calculating interest.
     ///
     /// This function can only called by the current governance.
     ///
-    /// @param _period the period for calculating interest.
+    /// @param _period The period in block time unit for calculating interest.
     function updatePeriod(uint256 _period) external onlyGovernance {
         require(_period > 0, "StakingPools: period cannot be 0");
         _ctx.updatePeriod(_period);
@@ -109,7 +116,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         emit PeriodUpdated(_period, block.timestamp);
     }
 
-    /// @dev Set the threshold of periods to wait before claiming interest is allowed
+    /// @dev Sets the threshold of periods to wait before claiming interest is allowed
     ///
     /// @param _periodThreshold The threshold of periods to wait before claiming interest is allowed
     function setPeriodThreshold(uint256 _periodThreshold)
@@ -125,7 +132,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         emit PeriodThresholdUpdated(_periodThreshold);
     }
 
-    /// @dev Set the address of the official account distributing tokens as reward of stakings.
+    /// @dev Sets the address of the official account distributing tokens as reward of stakings.
     ///
     /// This function can only called by the current governance.
     ///
@@ -208,7 +215,6 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
     /// @dev Stakes tokens into a pool.
     ///
     /// @param _depositAmount the amount of tokens to deposit.
-    // do nothing against pool; update deposit and unclaimed(interest) in stake
     function deposit(uint256 _depositAmount)
         external
         nonReentrant
@@ -217,7 +223,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         Stake.Data storage _stake = _stakes[msg.sender];
         require(
             _inLevel(_stake.totalDeposited + _depositAmount, _ctx.levels),
-            "not in any level"
+            "StakingPools: not in any level"
         );
         _stake.update(_ctx);
 
@@ -226,9 +232,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
 
     /// @dev Claims all rewarded tokens from a pool.
     ///
-    /// Claim the amount if the interest is enough from the target pool, claim all otherwise.
-    ///
-    /// @notice use this function to claim the tokens from a corresponding pool by ID.
+    /// @param _claimAmount Claims the amount if the user interest is enough, claim all otherwise.
     function claim(uint256 _claimAmount) external nonReentrant inWhitelist() {
         Stake.Data storage _stake = _stakes[msg.sender];
         _stake.update(_ctx);
@@ -241,7 +245,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         _claim(_claimAmount);
     }
 
-    /// @dev Claims all rewards from a pool and then withdraws all staked tokens.
+    /// @dev Claims all rewards from the pool and withdraws all staked tokens.
     function exit() external nonReentrant inWhitelist() {
         Stake.Data storage _stake = _stakes[msg.sender];
         _stake.update(_ctx);
@@ -315,6 +319,11 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         );
     }
 
+    /// @dev Returns true if the deposit is long enough to be claimed
+    ///
+    /// @param _account The target account to be checked.
+    ///
+    /// @return True if the _account can claim any, false otherwise.
     function canClaim(address _account) external view returns (bool) {
         Stake.Data storage _stake = _stakes[_account];
         return _stake.canClaim(_ctx);
@@ -379,7 +388,7 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         );
     }
 
-    /// @dev Stakes tokens into a pool.
+    /// @dev Stakes tokens of the msg.sender to the pool.
     ///
     /// The pool and stake MUST be updated before calling this function.
     ///
@@ -395,9 +404,10 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         emit TokensDeposited(msg.sender, _depositAmount);
     }
 
-    /// @dev Withdraws all staked tokens from a pool.
+    /// @dev Withdraws all staked tokens of the msg.sender from the pool.
     ///
     /// The pool and stake MUST be updated before calling this function.
+    /// The function only withdraws staked tokens, not the interest yield.
     function _withdraw() internal {
         Stake.Data storage _stake = _stakes[msg.sender];
 
@@ -411,11 +421,11 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         emit TokensWithdrawn(msg.sender, _withdrawAmount);
     }
 
-    /// @dev Claims rewarded tokens from a pool.
+    /// @dev Claims some rewarded tokens of the msg.sender from the pool.
     ///
     /// The pool and stake MUST be updated before calling this function.
     ///
-    /// @notice use this function to claim the tokens from a corresponding pool by ID.
+    /// @param _claimAmount Claims the amount if the user interest is enough, claim all otherwise.
     function _claim(uint256 _claimAmount) internal {
         Stake.Data storage _stake = _stakes[msg.sender];
 
@@ -439,6 +449,8 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
     ///
     /// @param _amount the amount to be checked
     /// @param _levels the array of defined levels
+    ///
+    /// @return True if the amount is with any level, false otherwise.
     function _inLevel(uint256 _amount, Pool.Level[] storage _levels)
         internal
         view

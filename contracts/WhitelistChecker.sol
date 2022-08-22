@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import {Whitelist} from "./Whitelist.sol";
 import {IWhitelistChecker} from "./interfaces/IWhitelistChecker.sol";
 
+/// @title WhitelistChecker
+/// @dev A contract which keep track of whether it is using a list of whitelist contracts.
 contract WhitelistChecker is IWhitelistChecker {
     event WhitelistAdded(Whitelist _whitelist);
 
@@ -13,8 +15,10 @@ contract WhitelistChecker is IWhitelistChecker {
 
     mapping(Whitelist => uint256) whitelistIndex;
 
+    /// @dev A modifier which reverts when the caller is not the governance.
     modifier onlyGovernance() virtual {_;}
 
+    /// @dev A modifier which reverts when the msg.sender has no NFT in any whitelist
     modifier inWhitelist() virtual {
         require(whitelist.length > 0, "StakingPools: whitelist not set");
         bool _inList;
@@ -28,9 +32,11 @@ contract WhitelistChecker is IWhitelistChecker {
         _;
     }
 
-    /// @dev Add a whitelist to staking contract
+    /// @dev Adds a whitelist to watch list.
     ///
-    /// @param _whitelist the address of the whitelist contract
+    /// This function can only called by the current governance.
+    ///
+    /// @param _whitelist The address of the whitelist contract
     function addWhitelist(Whitelist _whitelist)
         external
         virtual
@@ -45,13 +51,17 @@ contract WhitelistChecker is IWhitelistChecker {
             whitelistIndex[_whitelist] == 0,
             "StakingPools: the whitelist already added"
         );
-        _whitelist.addChecker(IWhitelistChecker(address(this)));
         whitelist.push(_whitelist);
         whitelistIndex[_whitelist] = whitelist.length;
 
         emit WhitelistAdded(_whitelist);
     }
 
+    /// @dev Adds a whitelist to watch list.
+    ///
+    /// This function can only called by the current governance.
+    ///
+    /// @param _whitelist The address of the whitelist contract
     function removeWhitelist(Whitelist _whitelist)
         external
         virtual
@@ -62,7 +72,6 @@ contract WhitelistChecker is IWhitelistChecker {
             whitelistIndex[_whitelist] != 0,
             "StakingPools: the whitelist doesn't exist"
         );
-        _whitelist.removeChecker(IWhitelistChecker(address(this)));
         uint256 _whitelistPtr = whitelistIndex[_whitelist];
         if (_whitelistPtr != whitelist.length) {
             whitelist[_whitelistPtr - 1] = whitelist[whitelist.length - 1];
@@ -74,6 +83,11 @@ contract WhitelistChecker is IWhitelistChecker {
         emit WhitelistRemoved(_whitelist);
     }
 
+    /// @dev Gets all NFT tokens the owner has.
+    ///
+    /// @param _owner The owner address.
+    ///
+    /// @return A list where n-th leading number indicates the following number of numbers are tokenIds of n-th watched whitelist
     function getAllTokens(address _owner)
         external
         view
@@ -99,6 +113,13 @@ contract WhitelistChecker is IWhitelistChecker {
         return _ret;
     }
 
+    /// @dev Returns ture if the staking contract is using the NFT, false otherwise.
+    ///
+    /// Return true if removing the target NFT does not affect the staking contract.
+    ///
+    /// @param _whitelist The whitelist of the NFT.
+    /// @param _owner The owner of the NFT.
+    /// @param _tokenId The token ID of the NFT.
     function isUsing(
         Whitelist _whitelist,
         address _owner,
