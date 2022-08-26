@@ -10,13 +10,13 @@ The following are explanations for some user scenarios and the contract function
 
 - Checker management
 
-The whitelist contract keeps track of a list of checkers, which check whitelist for access control. A checker can only be added to whitelist by governance. Conversely, a checker can be removed by both the checker contract itself or the governance. The whitelist contract uses the method, `isUsing` in checker contracts to know if any checker is relying its access control on the whitelist contract.
+The whitelist contract keeps track of a list of checkers, which check whitelist for access control. A checker can only be added to whitelist by governance. Conversely, a checker can be removed by both the checker contract itself or the governance. The whitelist contract uses the method, `acceptsRemoval` in checker contracts to know if any checker is relying its access control on the whitelist contract.
 
 The relative methods are `addChecker`, and `removeChecker`.
 
 - NFT manageement
 
-The whitelist contract relies on an external oracle to synchronize whether users has transfered their NFT token to our contract on the other blockchain. Upon receiveing relative event on the other blockchain, the oracle adds the NFT to the whitelist. Such oracle has to be the governance. On the other hand, only the NFT owner is able to remove an NFT from the whitelist when no checker contracts `isUsing` the NFT. The oracle can then inform the contract on the other blockchain to return the NFT back to the user.
+The whitelist contract relies on an external oracle to synchronize whether users has transfered their NFT token to our contract on the other blockchain. Upon receiveing relative event on the other blockchain, the oracle adds the NFT to the whitelist. Such oracle has to be the governance. On the other hand, only the NFT owner is able to remove an NFT from the whitelist when every checker contracts `acceptsRemoval`. The oracle can then inform the contract on the other blockchain to return the NFT back to the user.
 
 The relative methods are `addNFT`, and `removeNFT`.
 
@@ -164,9 +164,9 @@ This method can only be called by the pending governance set by the function, `s
 
 </br>
 
-- isUsing
+- acceptsRemoval
 
-Returns true if the owner of the NFT has staking in the staking contract which is only relying on that NFT.
+Returns true if removing the NFT does not hinders the token owner from claim/exit existing deposits, false otherwise.
 
 </br>
 
