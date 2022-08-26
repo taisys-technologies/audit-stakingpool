@@ -84,23 +84,24 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         _;
     }
 
-    /// @dev Returns ture if the staking contract is using the NFT, false otherwise.
+    /// @dev Returns ture if removing the NFT does not affact the staking contract, false otherwise.
     ///
-    /// Return true if removing the target NFT does not affect the staking contract.
+    /// When the removal hinders the token owner from claim/exit existing deposit,
+    /// the owner is considered "affected".
     ///
     /// @param _whitelist The whitelist of the NFT.
     /// @param _owner The owner of the NFT.
     /// @param _tokenId The token ID of the NFT.
-    function isUsing(
+    function acceptsRemoval(
         Whitelist _whitelist,
         address _owner,
         uint256 _tokenId
     ) external view override returns (bool) {
         return (
-            whitelistIndex[_whitelist] != 0 &&
-            _stakes[_owner].totalDeposited != 0 &&
-            _whitelist.balanceOf(_owner) <= 1 &&
-            _whitelist.ownerOf(_tokenId) == _owner
+            whitelistIndex[_whitelist] == 0 ||
+            _stakes[_owner].totalDeposited == 0 ||
+            getAllBalance(_owner) > 1 ||
+            _whitelist.ownerOf(_tokenId) != _owner
         );
     }
 

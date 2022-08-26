@@ -7,5 +7,5 @@ interface IWhitelistChecker {
     function getAllTokens(address _owner) external view returns (uint256[] memory);
     function addWhitelist(Whitelist _whitelist) external;
     function removeWhitelist(Whitelist _whitelist) external;
-    function isUsing(Whitelist _whitelist, address _owner, uint256 _tokenId) external view returns(bool);
+    function acceptsRemoval(Whitelist _whitelist, address _owner, uint256 _tokenId) external view returns(bool);
 }

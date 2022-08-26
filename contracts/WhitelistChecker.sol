@@ -72,6 +72,7 @@ contract WhitelistChecker is IWhitelistChecker {
             whitelistIndex[_whitelist] != 0,
             "StakingPools: the whitelist doesn't exist"
         );
+        _whitelist.removeChecker(IWhitelistChecker(address(this)));
         uint256 _whitelistPtr = whitelistIndex[_whitelist];
         if (_whitelistPtr != whitelist.length) {
             whitelist[_whitelistPtr - 1] = whitelist[whitelist.length - 1];
@@ -95,10 +96,7 @@ contract WhitelistChecker is IWhitelistChecker {
         override
         returns (uint256[] memory)
     {
-        uint256 _balance = 0;
-        for (uint256 i = 0; i < whitelist.length; i++) {
-            _balance += whitelist[i].balanceOf(_owner);
-        }
+        uint256 _balance = getAllBalance(_owner);
         uint256[] memory _ret = new uint256[](_balance + whitelist.length);
         uint256 _ptr = 0;
         for (uint256 i = 0; i < whitelist.length; i++) {
@@ -113,16 +111,30 @@ contract WhitelistChecker is IWhitelistChecker {
         return _ret;
     }
 
-    /// @dev Returns ture if the staking contract is using the NFT, false otherwise.
+    /// @dev Returns ture if removing the NFT does not affact the owner, false otherwise.
     ///
-    /// Return true if removing the target NFT does not affect the staking contract.
+    /// When the removal hinders the token owner from claim/exit existing deposit,
+    /// the owner is considered "affected".
     ///
     /// @param _whitelist The whitelist of the NFT.
     /// @param _owner The owner of the NFT.
     /// @param _tokenId The token ID of the NFT.
-    function isUsing(
+    function acceptsRemoval(
         Whitelist _whitelist,
         address _owner,
         uint256 _tokenId
     ) external view virtual override returns (bool) {}
+
+    /// @dev Gets the number of NFTs the owner has in all watched whitelists.
+    ///
+    /// @param _owner The owner address.
+    ///
+    /// @return The number of NFTs the owner has.
+    function getAllBalance(address _owner) internal view returns (uint256) {
+        uint256 _balance = 0;
+        for (uint256 i = 0; i < whitelist.length; i++) {
+            _balance += whitelist[i].balanceOf(_owner);
+        }
+        return _balance;
+    }
 }

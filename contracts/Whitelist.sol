@@ -100,10 +100,14 @@ contract Whitelist {
 
     /// @dev Removes a whitelistChecker to the whitelist.
     ///
-    /// This function can only called by the current governance.
+    /// This function can only called by the current governance or the Checker themselves.
     ///
     /// @param _checker The whitelistChecker.sol contract to be removed.
-    function removeChecker(IWhitelistChecker _checker) external onlyGovernance {
+    function removeChecker(IWhitelistChecker _checker) external {
+        require(
+            msg.sender == address(_checker) || msg.sender == governance,
+            "Whitelist: only checker or governance"
+        );
         require(
             checkerIndex[_checker] != 0,
             "Whitelist: the checker doesn't exist"
@@ -150,7 +154,7 @@ contract Whitelist {
         Whitelist _whitelist = Whitelist(address(this));
         for (uint256 i = 0; i < checkers.length; i++) {
             require(
-                !checkers[i].isUsing(_whitelist, msg.sender, _tokenId),
+                checkers[i].acceptsRemoval(_whitelist, msg.sender, _tokenId),
                 "Whitelist: cannot remove when checker is using"
             );
         }
