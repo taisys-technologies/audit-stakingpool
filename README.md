@@ -4,7 +4,7 @@ The purpose of this contract is to record user NFTs on the other blockchain for 
 
 Each deployed whtielist records exactly one kind of NFT token.
 
-The following are explanations for some user scenarios and the contract functions.
+The following explanations for some user scenarios and the contract functions.
 
 ## Contract Scenario Description
 
@@ -84,7 +84,7 @@ Gets the list of tokens the owner has.
 
 # audit-stakingPool
 
-The purpose of this contract is to reward whitelisted users to stake assigned ERC20 tokens.
+The purpose of this contract is to reward whitelisted users staking assigned ERC20 tokens.
 
 The reward is decided by variables including period, periodThreshold, and level.
 
