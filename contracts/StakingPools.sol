@@ -40,20 +40,11 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         uint256 timeAdded
     );
 
-    event PendingGovernanceUpdated(address pendingGovernance);
-
-    event GovernanceUpdated(address governance);
-
     event TokensDeposited(address indexed user, uint256 amount);
 
     event TokensWithdrawn(address indexed user, uint256 amount);
 
     event TokensClaimed(address indexed user, uint256 amount);
-
-    /// @dev The address of the account which currently has administrative capabilities over this contract.
-    address public governance;
-
-    address public pendingGovernance;
 
     /// @dev The context shared between the pools.
     Pool.Context private _ctx;
@@ -182,35 +173,6 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         );
 
         emit LevelAdded(_interest, _lowerBound, _upperBound, currentPeriod);
-    }
-
-    /// @dev Sets the governance.
-    ///
-    /// This function can only called by the current governance.
-    ///
-    /// @param _pendingGovernance the new pending governance.
-    function setPendingGovernance(address _pendingGovernance)
-        external
-        onlyGovernance
-    {
-        require(
-            _pendingGovernance != address(0),
-            "StakingPools: pending governance address cannot be 0x0"
-        );
-        pendingGovernance = _pendingGovernance;
-
-        emit PendingGovernanceUpdated(_pendingGovernance);
-    }
-
-    function acceptGovernance() external {
-        require(
-            msg.sender == pendingGovernance,
-            "StakingPools: only pending governance"
-        );
-
-        governance = pendingGovernance;
-
-        emit GovernanceUpdated(pendingGovernance);
     }
 
     /// @dev Stakes tokens into a pool.

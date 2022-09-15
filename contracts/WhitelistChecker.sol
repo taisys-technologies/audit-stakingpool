@@ -6,10 +6,19 @@ import {IWhitelistChecker} from "./interfaces/IWhitelistChecker.sol";
 
 /// @title WhitelistChecker
 /// @dev A contract which keep track of whether it is using a list of whitelist contracts.
-contract WhitelistChecker is IWhitelistChecker {
+abstract contract WhitelistChecker is IWhitelistChecker {
+    event PendingGovernanceUpdated(address pendingGovernance);
+
+    event GovernanceUpdated(address governance);
+
     event WhitelistAdded(Whitelist _whitelist);
 
     event WhitelistRemoved(Whitelist _whitelist);
+
+    /// @dev The address of the account which currently has administrative capabilities over this contract.
+    address public governance;
+
+    address public pendingGovernance;
 
     Whitelist[] public whitelist;
 
@@ -17,6 +26,38 @@ contract WhitelistChecker is IWhitelistChecker {
 
     /// @dev A modifier which reverts when the caller is not the governance.
     modifier onlyGovernance() virtual {_;}
+
+    /// @dev Sets the governance.
+    ///
+    /// This function can only called by the current governance.
+    ///
+    /// @param _pendingGovernance the new pending governance.
+    function setPendingGovernance(address _pendingGovernance)
+        external
+        onlyGovernance
+    {
+        require(
+            _pendingGovernance != address(0),
+            "StakingPools: pending governance address cannot be 0x0"
+        );
+        pendingGovernance = _pendingGovernance;
+
+        emit PendingGovernanceUpdated(_pendingGovernance);
+    }
+
+    /// @dev Sets the pending governance.
+    ///
+    /// This function can only called by the pending governance.
+    function acceptGovernance() external {
+        require(
+            msg.sender == pendingGovernance,
+            "StakingPools: only pending governance"
+        );
+
+        governance = pendingGovernance;
+
+        emit GovernanceUpdated(pendingGovernance);
+    }
 
     /// @dev A modifier which reverts when the msg.sender has no NFT in any whitelist
     modifier inWhitelist() virtual {
@@ -110,20 +151,6 @@ contract WhitelistChecker is IWhitelistChecker {
         }
         return _ret;
     }
-
-    /// @dev Returns ture if removing the NFT does not affact the owner, false otherwise.
-    ///
-    /// When the removal hinders the token owner from claim/exit existing deposit,
-    /// the owner is considered "affected".
-    ///
-    /// @param _whitelist The whitelist of the NFT.
-    /// @param _owner The owner of the NFT.
-    /// @param _tokenId The token ID of the NFT.
-    function acceptsRemoval(
-        Whitelist _whitelist,
-        address _owner,
-        uint256 _tokenId
-    ) external view virtual override returns (bool) {}
 
     /// @dev Gets the number of NFTs the owner has in all watched whitelists.
     ///
