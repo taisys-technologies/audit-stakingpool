@@ -25,7 +25,10 @@ abstract contract WhitelistChecker is IWhitelistChecker {
     mapping(Whitelist => uint256) whitelistIndex;
 
     /// @dev A modifier which reverts when the caller is not the governance.
-    modifier onlyGovernance() virtual {_;}
+    modifier onlyGovernance() {
+        require(msg.sender == governance, "StakingPools: only governance");
+        _;
+    }
 
     /// @dev Sets the governance.
     ///

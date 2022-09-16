@@ -69,12 +69,6 @@ contract StakingPools is WhitelistChecker, ReentrancyGuard {
         governance = _governance;
     }
 
-    /// @dev A modifier which reverts when the caller is not the governance.
-    modifier onlyGovernance() override {
-        require(msg.sender == governance, "StakingPools: only governance");
-        _;
-    }
-
     /// @dev Returns ture if removing the NFT does not affact the staking contract, false otherwise.
     ///
     /// When the removal hinders the token owner from claim/exit existing deposit,
