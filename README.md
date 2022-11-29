@@ -82,7 +82,7 @@ Gets the list of tokens the owner has.
 
 </br>
 
-# audit-stakingPool
+# Audit StakingPool
 
 The purpose of this contract is to reward whitelisted users staking assigned ERC20 tokens.
 
