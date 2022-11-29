@@ -1,4 +1,4 @@
-# audit-whitelist
+# Audit Whitelist
 
 The purpose of this contract is to record user NFTs on the other blockchain for `WhitelistChecker.sol`(checker contracts) to perform access control.
 
@@ -100,11 +100,11 @@ The relative methods are `addWhitelist`, and `removeWhitelist`.
 
 - Rewarding mechanism
 
-The reward of a particular staking amount is rewarded to the user per *period* time passed since the first deposit. For any staking amount, *amount* s.t. *level.lowerBound* ${\le} *amount* < *level.upperBound* gets *level.interest* per period time. When a staking fits in multiple overlapping *level*s stored in the staking contract, the latest fitting one is used.
+The reward of a particular staking amount is rewarded to the user per _period_ time passed since the first deposit. For any staking amount, _amount_ s.t. _level.lowerBound_ ${\le} _amount_ < _level.upperBound_ gets _level.interest_ per period time. When a staking fits in multiple overlapping *level*s stored in the staking contract, the latest fitting one is used.
 
-Even though the reward is accumulated since the first deposit, it can only be claimed after *periodThreshold* of periods since then. In other words, the reward before *periodThreshold* after the first deposit is considered to be 0.
+Even though the reward is accumulated since the first deposit, it can only be claimed after _periodThreshold_ of periods since then. In other words, the reward before _periodThreshold_ after the first deposit is considered to be 0.
 
-Note that *period*, *periodThreshold*, and *level*s can all be modified overtime by the goverance. Addtional staking amounts from users are also allow. All of them come into effect in the next period of time. Among them, *period*, *level*s, and addtional staking amounts do not work retroactively. Reward already accumulated cannot be changed.
+Note that _period_, _periodThreshold_, and *level*s can all be modified overtime by the goverance. Addtional staking amounts from users are also allow. All of them come into effect in the next period of time. Among them, _period_, *level*s, and addtional staking amounts do not work retroactively. Reward already accumulated cannot be changed.
 
 Also note that the reward is not added to the staking. Without user operations, a user staking does not grow overtime.
 
@@ -114,11 +114,10 @@ The relative methods are `updatePeriod`, `setPeriodTreshold`, and `addLevel`.
 
 To participate in a staking process, users has to have at least one NFT in whitelist contracts watched by the staking contract. Besides, a staking amount cannot be staked if it is not bounded in any level.
 
-With staking in the contract, users can claim partial to all of their reward if there is any. Users can also withdraw all their staking along with their reward at once. Also, staking more to the staking contract is also valid as long as the total deposit is still in range of any *level*.
+With staking in the contract, users can claim partial to all of their reward if there is any. Users can also withdraw all their staking along with their reward at once. Also, staking more to the staking contract is also valid as long as the total deposit is still in range of any _level_.
 The relative methods are `deposit`, `claim`, and `exit`.
 
 ## Function Description
-
 
 - onlyGovernance
 
@@ -277,3 +276,37 @@ Gets the amount deposited from the user.
 Gets details of staking from the user including total deposits, accumulated reward, last internal update to the stake, and the period of the first deposit from the user. The period of the first deposit from the user resets everytime when `exit` is called.
 
 </br>
+
+## Document
+
+- [Notion](https://nonstop-krypton-90d.notion.site/Taisys-Staking-pool-Document-1496630523104355bf9d2bd20610b978)
+- [Audit Report](./audit/)
+
+## Test
+
+### Setup
+
+```bash
+npm install
+```
+
+### Run
+
+```bash
+# run all tests
+npx hardhat test
+
+# run single test
+npx hardhat test ${TEST_FILE_PATH}
+
+# run tests with coverage report
+npx hardhat coverage
+```
+
+## Static Analysis
+
+- [Slither Github](https://github.com/crytic/slither)
+
+```bash
+slither .
+```
